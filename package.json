@@ -4,11 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server-express.js"
   },
-  "author": "rob",
+  "author": "Robert Cecil",
   "license": "MIT",
   "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
     "serialport": "^7.1.4",
     "xbee-rx": "^4.0.1"
   }
