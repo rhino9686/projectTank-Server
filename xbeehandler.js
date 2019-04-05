@@ -56,7 +56,7 @@ main = function() {
 
   }
   catch(err) {
-    console.log("Error: serialport not found at specified location!");
+    console.log("Error: serialport not found at specified location");
     return;
   }
  
