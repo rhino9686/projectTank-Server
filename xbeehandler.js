@@ -4,6 +4,16 @@ var util = require('util');
 
 var C = xbee_api.constants;
 
+
+class xBeeHandler {
+
+  constructor() {
+    
+  }
+  
+
+}
+
 AT_request = function(command_in, serialport_in, xbeeAPI_in ) {
 
   let frame_obj = { 
