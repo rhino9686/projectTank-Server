@@ -14,7 +14,7 @@ main = function() {
 
   });
  // initialize our local serialport
-  var serialport = new SerialPort("/dev/tty.usbserial-AL02BYQV", {
+  var serialport = new SerialPort("/dev/tty.usbserial-A9QD1BFJ", {
     baudRate: 9600,
     parser: xbeeAPI.rawParser()
   });
@@ -46,12 +46,14 @@ AT_request = function(serialport_in, xbeeAPI_in ) {
 
   xbeeAPI_in.parser.on("data", function(frame) {
     console.log(">>", frame);
-    raw_frame = frame;
+    let raw_frame = frame;
+    console.log(raw_frame['commandData'].readInt32BE());
 
-    frameParsed = xbeeAPI_in.parseFrame(raw_frame);
-   // console.log(frameParsed);
+    let frameParsed = raw_frame['commandData'];
 
-    serialport_in.close();
+  
+
+   serialport_in.close();
   
   });
      

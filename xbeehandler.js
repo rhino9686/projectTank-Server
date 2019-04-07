@@ -5,7 +5,7 @@ var util = require('util');
 var C = xbee_api.constants;
 
 
-class xBeeHandler {
+module.exports = class xBeeHandler {
 
   constructor() {
     
@@ -15,6 +15,7 @@ class xBeeHandler {
 }
 
 AT_request = function(command_in, serialport_in, xbeeAPI_in ) {
+
 
   let frame_obj = { 
     type: C.FRAME_TYPE.AT_COMMAND,
@@ -32,6 +33,7 @@ AT_request = function(command_in, serialport_in, xbeeAPI_in ) {
     const return_frame = frame;
 
     serialport_in.close();
+
     return return_frame;
   
   });
@@ -42,6 +44,39 @@ AT_request = function(command_in, serialport_in, xbeeAPI_in ) {
   }); 
 
 }
+
+
+Transmit_request = function(command_in, serialport_in, xbeeAPI_in ) {
+
+  let frame_obj = { 
+    type: C.FRAME_TYPE.AT_COMMAND,
+    command: command_in,
+    commandParameter: [],
+  };
+
+  serialport_in.on("open", function() {
+    xbeeAPI_in.builder.write(frame_obj);
+  });
+
+
+  xbeeAPI_in.parser.on("data", function(frame) {
+    console.log(">>", frame);
+    const return_frame = frame;
+
+    serialport_in.close();
+
+    return return_frame;
+  
+  });
+     
+  // All frames parsed by the XBee will be emitted here
+  serialport_in.on("close", function(frame) {
+    console.log("transaction completed");
+  }); 
+
+}
+
+
 
 main = function() {
 
@@ -54,14 +89,18 @@ main = function() {
 
  // initialize our local serialport
  // make sure serialport is open first
-  var serialport;
+  let serialport;
 
   try {
+    //Options for macbook:
+    const usb1 =  "/dev/tty.usbserial-1420";
+    const usb2 =  "/dev/tty.usbserial-AL02BYQV";
+    const usb3 = "/dev/tty.usbserial-A9QD1BFJ";
 
-    serialport = new SerialPort("/dev/tty.usbserial-AL02BYQV", {
+    serialport = new SerialPort(usb3, {
       baudRate: 9600,
       parser: xbeeAPI.rawParser()
-      ((err) => {console.log("error!") })
+      //((err) => {console.log("error!") })
     });
 
   }
@@ -77,9 +116,6 @@ main = function() {
 
   //first AT_request
   let testBuffer = AT_request( "MY", serialport, xbeeAPI );
-
-  //second AT_request
-  testBuffer = AT_request( "DL", serialport, xbeeAPI );
 
   return;
 }
