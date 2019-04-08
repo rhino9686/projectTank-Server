@@ -38,3 +38,8 @@ app.listen(8000, () => {
   app.route('/api/cats/:name').delete((req, res) => {
     res.sendStatus(204)
   })
+
+  app.route('/api/tanks/').get((req, res) => {
+    res.send({ health: 100 });
+  })
+
