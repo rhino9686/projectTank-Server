@@ -5,10 +5,7 @@ var util = require('util');
 var C = xbee_api.constants;
 
 
-module.exports = class xBeeHandler {
-
-   xbeeAPI;
-   serialport;
+class xBeeHandler {
 
   constructor() {
     //initialise local xbee device
@@ -17,8 +14,9 @@ module.exports = class xBeeHandler {
       api_mode: 1,         // [1, 2]; 1 is default, 2 is with escaping (set ATAP=2)
       module: "any",       // ["802.15.4", "ZNet", "ZigBee", "Any"]; This does nothing, yet!
     });
-  }
 
+    this.serialport = null;
+  }
 
   initSerial() {
       // initialize our local serialport
@@ -31,26 +29,30 @@ module.exports = class xBeeHandler {
 
       this.serialport = new SerialPort(usb3, {
         baudRate: 9600,
-        parser: xbeeAPI.rawParser()
-        //((err) => {console.log("error!") })
+        parser: this.xbeeAPI.rawParser()
+        ((err) => {console.log("error!") })
       });
 
     }
     catch(err) {
       console.log("Error: serialport not found at specified location");
-      return;
+      return false;
     }  
 
       //connect the data with pipes
-    serialport.pipe(xbeeAPI.parser);
-    xbeeAPI.builder.pipe(serialport);
+    this.serialport.pipe(this.xbeeAPI.parser);
+    this.xbeeAPI.builder.pipe(this.serialport);
 
   }
   
 
   AT_request(command_in) {
 
-    initSerial();
+    let success = this.initSerial();
+
+    if (!success) {
+      return;
+    }
 
     let frame_obj = { 
       type: C.FRAME_TYPE.AT_COMMAND,
@@ -82,6 +84,11 @@ module.exports = class xBeeHandler {
 
   API_request() {
 
+    let success = this.initSerial();
+    
+    if (!success) {
+      return;
+    }
 
     let frame_obj = {
       type: 0x01, // xbee_api.constants.FRAME_TYPE.TX_REQUEST_16 
@@ -92,7 +99,7 @@ module.exports = class xBeeHandler {
     }
   
     this.serialport.on("open", function() {
-      xbeeAPI_in.builder.write(frame_obj);
+      this.xbeeAPI.builder.write(frame_obj);
     });
   
   
@@ -100,7 +107,7 @@ module.exports = class xBeeHandler {
       console.log(">>", frame);
       const return_frame = frame;
   
-      serialport_in.close();
+      this.serialport.close();
   
       return return_frame;
     
@@ -119,8 +126,10 @@ module.exports = class xBeeHandler {
 
 main = function() {
 
+  let xBee = new xBeeHandler();
+
   //first AT_request
-  let testBuffer = AT_request( "MY", serialport, xbeeAPI );
+  let testBuffer = xBee.AT_request( "MY");
 
   return;
 }
