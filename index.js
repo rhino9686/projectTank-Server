@@ -15,7 +15,7 @@ main = function() {
   });
  // initialize our local serialport
   var serialport = new SerialPort("/dev/tty.usbserial-A9QD1BFJ", {
-    baudRate: 9600,
+    baudRate: 57600,
     parser: xbeeAPI.rawParser()
   });
 

@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
+var myHealth = 300;
+
 
 var corsOptions = {
     origin: 'http://localhost:4200',
@@ -18,11 +20,7 @@ app.listen(8000, () => {
     console.log('Server started!')
   })
 
-  app.route('/api/cats').get((req, res) => {
-    res.send({
-      cats: [{ name: 'lilly' }, { name: 'lucy' }],
-    })
-  })
+
 
   app.route('/api/cats/:name').get((req, res) => {
     const requestedCatName = req.params['name']
@@ -39,7 +37,13 @@ app.listen(8000, () => {
     res.sendStatus(204)
   })
 
-  app.route('/api/tanks/').get((req, res) => {
-    res.send({ health: 100 });
+  app.route('/api/tankOne/').get((req, res) => {
+    res.send({ health: myHealth });
+    myHealth--;
+  })
+
+  app.route('/api/tankTwo/').get((req, res) => {
+    res.send({ health: myHealth });
+    myHealth --;
   })
 

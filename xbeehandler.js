@@ -2,6 +2,23 @@ let xbee_api = require('xbee-api');
 var SerialPort = require('serialport');
 var util = require('util');
 
+
+//Server Stuff
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+
+const app = express();
+
+app.use(bodyParser.json());
+app.use(cors(corsOptions));
+
+var corsOptions = {
+  origin: 'http://localhost:4200',
+  optionsSuccessStatus: 200       // some legacy browsers (IE11, various SmartTVs) choke on 204 
+}
+
 var C = xbee_api.constants;
 
 
@@ -14,45 +31,38 @@ class xBeeHandler {
       api_mode: 1,         // [1, 2]; 1 is default, 2 is with escaping (set ATAP=2)
       module: "any",       // ["802.15.4", "ZNet", "ZigBee", "Any"]; This does nothing, yet!
     });
-
-    this.serialport = null;
+    this.C = xbee_api.constants;
   }
 
-  initSerial() {
-      // initialize our local serialport
+  AT_request(command_in, callback) {
+
       // make sure serialport is open first
-    try {
-      //Options for macbook:
-      const usb1 =  "/dev/tty.usbserial-1420";
-      const usb2 =  "/dev/tty.usbserial-AL02BYQV";
-      const usb3 = "/dev/tty.usbserial-A9QD1BFJ";
-
-      this.serialport = new SerialPort(usb3, {
-        baudRate: 9600,
-        parser: this.xbeeAPI.rawParser()
-        ((err) => {console.log("error!") })
-      });
-
-    }
-    catch(err) {
-      console.log("Error: serialport not found at specified location");
-      return false;
-    }  
-
-      //connect the data with pipes
-    this.serialport.pipe(this.xbeeAPI.parser);
-    this.xbeeAPI.builder.pipe(this.serialport);
-
-  }
+      let serialport;
+      try {
+        //Options for macbook:
+        const usb2 =  "/dev/tty.usbserial-AL02BYQV";
+        const usb3 = "/dev/tty.usbserial-A9QD1BFJ";
   
+        serialport = new SerialPort("/dev/tty.usbserial-AL02BYQV", {
+          baudRate: 57600,
+          parser: this.xbeeAPI.rawParser()
+        });
+        
+  
+      }
+      catch(err) {
+        console.log("Error: unable to connect to serialport");
+        console.log(err)
+        return false;
+      }  
+  
+        //connect the data with pipes
+      serialport.pipe(this.xbeeAPI.parser);
+      this.xbeeAPI.builder.pipe(serialport); 
 
-  AT_request(command_in) {
 
-    let success = this.initSerial();
-
-    if (!success) {
-      return;
-    }
+    let bee = this.xbeeAPI;
+    let sport = serialport;
 
     let frame_obj = { 
       type: C.FRAME_TYPE.AT_COMMAND,
@@ -60,82 +70,140 @@ class xBeeHandler {
       commandParameter: [],
     };
   
-    this.serialport.on("open", function() {
-      this.xbeeAPI.builder.write(frame_obj);
+    serialport.on("open", function() {
+       bee.builder.write(frame_obj);
     });
-  
+
   
     this.xbeeAPI.parser.on("data", function(frame) {
       console.log(">>", frame);
-      const return_frame = frame;
-  
-      this.serialport.close();
-      return return_frame;
+      serialport.close();
+      callback(frame);
     
     });
        
-    // All frames parsed by the XBee will be emitted here
-    this.serialport.on("close", function(frame) {
-      console.log("AT transaction completed");
-    }); 
-
-
   }
 
-  API_request() {
+  async API_request(command, callback) {
 
-    let success = this.initSerial();
-    
-    if (!success) {
-      return;
+     // make sure serialport is open first
+    let serialport;
+     try {
+      //Options for macbook:
+      const usb2 =  "/dev/tty.usbserial-AL02BYQV";
+      const usb3 = "/dev/tty.usbserial-A9QD1BFJ";
+
+      serialport = new SerialPort("/dev/tty.usbserial-AL02BYQV", {
+        baudRate: 57600,
+        parser: this.xbeeAPI.rawParser()
+      });
+      
     }
+    catch(err) {
+      console.log("Error: unable to connect to serialport");
+      console.log(err)
+      return false;
+    }  
+
+      //connect the data with pipes
+    serialport.pipe(this.xbeeAPI.parser);
+    this.xbeeAPI.builder.pipe(serialport); 
+
+
+    let bee = this.xbeeAPI;
+    let sport = serialport;
 
     let frame_obj = {
       type: 0x01, // xbee_api.constants.FRAME_TYPE.TX_REQUEST_16 
       id: 0x01, // optional, nextFrameId() is called per default
-      destination16: "ab00",
+      destination16: "ffff",
       options: 0x00, // optional, 0x00 is default
-      data: "TxData0A" // Can either be string or byte array.
+      data: "Hello from Server!\0" // Can either be string or byte array.
     }
   
-    this.serialport.on("open", function() {
-      this.xbeeAPI.builder.write(frame_obj);
+    serialport.on("open", function() {
+      bee.builder.write(frame_obj);
     });
   
   
     this.xbeeAPI.parser.on("data", function(frame) {
       console.log(">>", frame);
-      const return_frame = frame;
-  
-      this.serialport.close();
-  
-      return return_frame;
+      serialport.close();
+      return frame;
     
     });
        
-    // All frames parsed by the XBee will be emitted here
-    this.serialport.on("close", function(frame) {
-      console.log("transaction completed");
-    }); 
   
-  }
+  }//API_Request
 
+  receive_data(callback) {
+     // make sure serialport is open first
+     let serialport;
+     try {
+      //Options for macbook:
+      const usb2 =  "/dev/tty.usbserial-AL02BYQV";
+      const usb3 = "/dev/tty.usbserial-A9QD1BFJ";
+
+      serialport = new SerialPort("/dev/tty.usbserial-AL02BYQV", {
+        baudRate: 57600,
+        parser: this.xbeeAPI.rawParser()
+      });
+      
+    }
+    catch(err) {
+      console.log("Error: unable to connect to serialport");
+      console.log(err)
+      return false;
+    }  
+
+      //connect the data with pipes
+    serialport.pipe(this.xbeeAPI.parser);
+    this.xbeeAPI.builder.pipe(serialport); 
+
+    this.xbeeAPI.parser.on("data", function(frame) {
+      console.log(">>", frame);
+      serialport.close();
+      return frame;
+    
+    });
+
+  }//receive_data
 }
 
 
 
-main = function() {
-
-  let xBee = new xBeeHandler();
+runXBees = function() {
 
   //first AT_request
-  let testBuffer = xBee.AT_request( "MY");
+  
+{
+  let xBee = new xBeeHandler();
+  let testBuffer = xBee.AT_request( "MY", (res) => { 
+    console.log("yeet"); 
+
+  } );
+}
+
+setTimeout(() => {
+  let xBee2 = new xBeeHandler();
+  let testBuffer2 = xBee2.API_request("F", (res) => console.log("yeet2"));
+
+}, 90);
+
+
+setTimeout(() => {
+  let xBee3 = new xBeeHandler();
+  let testBuffer3 = xBee3.receive_data( (res) => console.log("yeet3"));
+
+}, 90 );
+
+
 
   return;
 }
 
 //run main program
-main();
+runXBees();
 
 
 
