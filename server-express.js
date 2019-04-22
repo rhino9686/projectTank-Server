@@ -1,11 +1,11 @@
+//Server imports
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-
 const app = express();
 
-var myHealth = 300;
-
+var tankOneHealth = 100;
+var tankTwoHealth = 100;
 
 var corsOptions = {
     origin: 'http://localhost:4200',
