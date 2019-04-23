@@ -211,7 +211,7 @@ poll = () => {
     GlobalXbeePtr = xBee;
     xBee.receive_data( (res) => 
     {
-      console.log(res); //For Debugging
+     // console.log(res); //For Debugging
       let frame = res;
       if ( !('data' in frame)) {
         return;
@@ -268,7 +268,8 @@ app.route('/api/tankOne/setup/').post((req, res) => {
   
   let typeNum = req.body['type'];
   let colorNum = req.body['color'];
-  console.log(typeNum);
+  console.log("Type: ", typeNum);
+  console.log( "Color: ", colorNum);
 
   GlobalXbeePtr.send_message(typeNum, colorNum, "One", (res) => {
       console.log(res);
@@ -282,7 +283,8 @@ app.route('/api/tankTwo/setup/').put((req, res) => {
 
   let typeNum = req.body['type'];
   let colorNum = req.body['color'];
-  console.log(typeNum);
+  console.log("Type: ", typeNum);
+  console.log( "Color: ", colorNum);
 
   GlobalXbeePtr.send_message(typeNum, colorNum, "Two", (res) => {
     console.log(res);
